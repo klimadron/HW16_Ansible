@@ -1,0 +1,8 @@
+version: "3"
+services:
+  nginx:
+    image: python:bullseye
+    container_name: nginx
+    ports:
+      - 81:80
+    command: tail -f /dev/null

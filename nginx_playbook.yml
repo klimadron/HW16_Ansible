@@ -1,0 +1,55 @@
+- hosts: all
+  tasks:
+    # - name: get apt and sudo
+    #   become: true
+    #   # become_method: su
+    #   ansible.builtin.get_url:
+    #     url: http://security.ubuntu.com/ubuntu/pool/main/a/apt/apt_2.7.0_amd64.deb
+    #     dest: /tmp/apt.deb
+    #     force: true
+    # - name: Install apt    
+    #   shell: cd /tmp && sudo dpkg -i apt.deb
+    # - name: Enable rewrite
+    #   become: true
+    #   ansible.builtin.raw: apt-get update && apt-get install -y sudo
+    #   changed_when: false
+    - name: Update and install nginx
+      become: true
+      # become_method: su
+      ansible.builtin.apt:
+        name:
+        - nginx
+        state: latest
+        update_cache: yes
+    - name: Ensure that Nginx service is running
+      become: true
+      become_method: sudo
+      ansible.builtin.service:
+        name: nginx
+        state: started
+    - name: Print all available facts
+      ansible.builtin.debug:
+        var: ansible_facts.hostname
+    - name: Delete file
+      become: true
+      become_method: sudo
+      file:
+        path: /var/www/html/index.html
+        state: absent    
+    - name: Templating index.html to index.nginx-debian.html
+      become: true
+      ansible.builtin.template:
+        src: index.html.j2
+        dest: /var/www/html/index.html
+    - name: Ensure that Nginx service is running
+      become: true
+      become_method: sudo
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
+    - name: Getting nginx version and display it
+      ansible.builtin.command: nginx -v
+      register: nginx_version
+      changed_when: false
+    - name: Display version
+      ansible.builtin.debug: msg={{nginx_version.stderr_lines}}
